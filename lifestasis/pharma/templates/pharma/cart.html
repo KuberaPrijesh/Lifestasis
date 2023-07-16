@@ -1,0 +1,92 @@
+{%extends "template.html" %}
+
+{%block body%}
+<div class="root-container">
+    <span style="display: flex; align-content: space-between; align-items: flex-start">
+        <h3 class="list-title">Items In Cart</h3><br>
+        <button class="item-detail default-button" id="return-pharma-btn" onclick="document.location='{% url 'pharma:shop' %}'">Back to Pharmacy</button>
+    </span>
+    <div class="list-container">
+        {% if cart %}
+        {% for order in cart %}
+        <div id="{{order.id}}" class="container" style="width: 20vw;">
+            <label class="item-detail-label">Item: </label>
+            <input class="item-detail" id="{{order.item.id}}_name" type="text" value="{{order.item.name}}" readonly><br>
+            <label class="item-detail-label">Amount:</label>
+            <input class="item-detail" id="{{order.item.id}}_amount" type="number" value="{{order.quantity}}" readonly>
+            <label class="item-detail-label">Total: </label>
+            <span class="item-detail" tabindex="0"><span class="stock-price">&#8377;</span> <input tabindex="-1" class="stock-price" id="age" type="text" value="{% widthratio order.quantity 1 order.item.price %}" pattern="[0-9]+" readonly>
+            </span><br>
+            <span>
+                <br>
+                <input class="item-detail" id="remove-from-cart" onclick="removeFromCart({{order.item.id}}, {{order.quantity}})" type="button" value="Remove All">
+                <input class="item-detail" id="remove-from-cart" onclick="removeFromCart({{order.item.id}}, 1)" type="button" value="-">
+                <input class="item-detail" id="remove-from-cart" onclick="plusone({{order.item.id}})" type="button" value="+">
+            </span>
+        </div>
+        {% endfor %}
+        
+        <span>
+            <h3 id="cart-total" style="margin: 2vh 2vw -2vh 2vw">Grand Total: &#8377;{{total}}</h3>
+            <button class="item-detail default-button" id="proceed-checkout-btn" onclick="document.location='{% url 'pharma:bill_info' %}'" style="margin: 2vh 2vw -2vh 2vw; font-size: 3vh">Proceed to checkout</button>
+        </span>
+        {% else %}
+        <span>
+            <h3 id="cart-total" style="margin: 2vh 2vw -2vh 2vw">No items in cart. Add items to cart in the shop page.</h3>
+            <button class="item-detail default-button" id="proceed-checkout-btn" onclick="document.location='{% url 'pharma:shop' %}'" style="margin: 2vh 2vw -2vh 2vw; font-size: 3vh">Return To Pharmacy</button>
+        </span>
+        {% endif %}
+    </div>
+</div>
+{%endblock%}
+
+{%block script%}
+<script>
+function removeFromCart(id, amount) {
+    console.log(id);
+    
+    var name = $('#' + id + '_name').val();
+    
+    console.log(name);
+    
+    $.ajax({
+        url : "{% url 'pharma:remove' %}",
+        data : {
+            'product_id' : id,
+            'remove_amount': amount
+        },
+        type : 'GET',
+        success : function(response) {
+            showMessage("Removed " + amount + " Of " + name + " From Cart");
+            location.reload();
+        },
+        error : function(error) {
+            showMessage("Error: Unable To Remove From Cart");
+            location.reload();
+        }
+    });
+}
+
+function plusone(id) {
+    console.log("item id: " + id);
+    var name = $('#' + id + '_name').val();
+    var amount =$('#' + id + '_amount').val();
+    amount += 1;
+    
+    $.ajax({
+        url : "{% url 'pharma:add'%}",
+        data : {
+            'product_id' : id
+        },
+        type : 'GET',
+        success : function(response) {
+            location.reload();
+        },
+        error : function(error) {
+            showMessage("Error: Unable To Add To Cart");
+            location.reload();
+        }
+    });
+}
+</script>
+{%endblock%}

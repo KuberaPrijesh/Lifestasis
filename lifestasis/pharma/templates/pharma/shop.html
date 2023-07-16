@@ -1,0 +1,80 @@
+{%extends "template.html" %}
+{%load static%}
+
+{%block body%}
+<div class="root-container">
+    <span style="display: flex; align-content: space-between; align-items: flex-start">
+        <h3 class="list-title">Items In Stock</h3>
+        <button class="item-detail default-button" id="cart-btn" onclick="document.location='{% url 'pharma:cart' %}'">Cart</button><pre>  </pre>
+        <button class="item-detail default-button" id="remove-stock-btn" onclick="document.location='{% url 'pharma:remove_stock' %}'">Remove Stocks</button><pre>  </pre>
+        <button class="item-detail default-button" id="bill-archive-btn" onclick="document.location='{% url 'pharma:bill_archive' %}'">View Bill Archive</button>
+        
+    </span>
+    <div class="list-container">
+        {% if items %}
+        {%for item in items%}
+        <div id="{{item.id}}" class="container" style="width: 20vw;">
+            <label class="item-detail-label">Item: </label>
+            <input class="item-detail" id="{{item.id}}_name" type="text" value="{{item.name}}" readonly><br>
+            <label class="item-detail-label">Price: </label>
+            <span class="item-detail" tabindex="0"><span class="stock-price">&#8377;</span> <input tabindex="-1" class="stock-price" id="age" type="text" value="{{item.price}}" pattern="[0-9]+" readonly></span><br>
+                <label class="item-detail-label">Amount:</label>
+            <span>
+                <input class="item-detail" id="{{item.id}}_amount" type="number" min="1" max="{{item.quantity}}" step="1" value="1">
+                <label>/{{item.quantity}}</label><br>
+                <input class="item-detail" id="add-to-cart" onclick="addtocart({{item.id}})" type="button" value="Add To Cart">
+            </span>
+        </div>
+        {%endfor%}
+        {% else %}
+        <div class="container">
+            <label class="item-detail-label">No Items In Stock</label>
+        </div>
+        {% endif %}
+        <div id="add-stock" class="container" style="align-content: center; justify-content: center; cursor: pointer; width: 20vw;" onclick="document.location='{% url 'pharma:add_stock' %}'">
+            <label style="font-size: 10vh;">+</label>
+        </div>
+    </div>
+</div>
+{%endblock%}
+
+
+{%block script%}
+<script>
+    function addtocart(id) {
+      console.log("item id: " + id);
+        var name = $('#' + id + '_name').val();
+        var inputAmount = $('#' + id + '_amount');
+        var amount = inputAmount.val();
+        var max = inputAmount.attr("max");
+        
+        amount = parseInt(amount);
+        max = parseInt(max);
+        
+        if (amount > max) {
+            amount = max;
+            inputAmount.val(amount.toString());
+        } else if ( amount < 1) {
+            amount = 1;
+            inputAmount.val(amount.toString());
+        }
+        
+        console.log("item amount: " + amount);
+        $.ajax({
+            url : "{% url 'pharma:place' %}",
+            data : {
+                'product_id' : id,
+                'product_amount': amount
+              },
+            type : 'GET',
+            success : function(response) {
+                location.reload();
+            },
+            error : function(error) {
+                showMessage("Error: Unable To Add To Cart");
+                location.reload();
+            }
+        });
+    }
+</script>
+{%endblock%}

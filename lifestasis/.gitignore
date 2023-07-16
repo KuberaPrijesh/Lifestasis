@@ -1,0 +1,13 @@
+
+.DS_Store
+__pycache__
+/.idea/med-bay.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/vcs.xml
+scripts/run.sh
+.vscode/med-bay snippets.code-snippets
+admins/static/style.css
+.vscode/tasks.json
+.idea/*

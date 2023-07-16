@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+{%load static%}
+<html>
+    <head>
+        <title>Med-Bay</title>
+        <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+        <!-- setting the theme of the website -->
+        {% if not request.COOKIES.theme %}
+        <link rel="stylesheet" id="css" type="text/css" href="{% static 'style.css' %}">
+        {% elif request.COOKIES.theme == "w" %}
+        <link rel="stylesheet" id="css" type="text/css" href="{% static 'style.css' %}">
+        {% elif request.COOKIES.theme == "d" %}
+        <link rel="stylesheet" id="css" type="text/css" href="{% static 'dark_theme.css' %}">
+        {% endif %}
+<!--        scripts-->
+        <script type="text/javascript" src="{% static 'template.js' %}"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+        {%block script%}
+        
+        {%endblock%}
+<!--        scripts-->
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="0" />
+    </head>
+
+    <body onload="showLogo()">
+        <div id="loadLogo"><img id="loadLogoImg" src="{%static 'images/med-bay.png'%}" alt="med-bay logo"></div>
+        <div class="floating-bar" id="floating-bar">
+            <div class="menu-bar">
+                <button class="side-bar-btn" value="click" onclick="closeSidebar()">
+                    <img class="side-bar-btn-icon" src="{% static 'images/menu.svg' %}" margin="0" height="100%" alt="menu">
+                </button>
+                <div id="logo-div">
+                    <img id="logo" onclick="document.location='{% url 'red' %}'" src="{% static 'images/med-bay.png' %}" alt="med-bay logo">
+                </div>
+                <div class="user-btns">
+                    <button class="user-btn" onclick="toggleTheme()" title="Toggle Theme">
+                        {% if not request.COOKIES.theme %}
+                        <img id="theme-button" class="user-btn-img" src="{% static 'images/dark.png' %}">
+                        {% elif request.COOKIES.theme == "w" %}
+                        <img id="theme-button" class="user-btn-img" src="{% static 'images/dark.png' %}">
+                        {% elif request.COOKIES.theme == "d" %}
+                        <img id="theme-button" class="user-btn-img" src="{% static 'images/light.png' %}">
+                        {% endif %}
+                    </button>
+                    <button class="user-btn">
+                        {% if not request.user.is_authenticated %}
+                        <img class="user-btn-img" onclick="location='{% url 'login' %}'" title="You are not logged in" src="{% static 'images/user.png' %}" height="40vh" alt="user icon">
+                        {% else %}
+                        <img class="user-btn-img" onclick="location='{% url 'confirm_logout' %}'" title="You are {{user}}" src="{% static 'images/user_loggedin.png' %}" height="40vh" alt="logged in user icon">
+                        {%endif%}
+                    </button>
+                </div>
+            </div>
+            <div class="side-bar-top">
+                <label id="side-bar-title">Navigation</label>
+            </div>
+        </div>
+        <div class="root-grid" id="root-grid">
+            <div class="side-bar">
+                <ul id="nav-list">
+                    <a class="nav-link" href="{% url 'home' %}"><li class="nav-item">Home</li></a>
+                    {% if user.staff.role == "d" %}
+                    <a class="nav-link" href="{% url 'doctor:dashboard' %}"><li class="nav-item">Doctor's Dashboard</li></a>
+                    <a class="nav-link" href="{% url 'doctor:recover' %}"><li class="nav-item">Recover Unsaved Prescriptions</li></a>
+                    <a class="nav-link" href="{% url 'doctor:case_archive' %}"><li class="nav-item">Patient Archive</li></a>
+                    {% elif user.staff.role == "p" %}
+                    <a class="nav-link" href="{% url 'pharma:shop' %}"><li class="nav-item">Pharmacy</li></a>
+                    <a class="nav-link" href="{% url 'pharma:bill_archive' %}"><li class="nav-item">Bill Archive</li></a>
+                    <a class="nav-link" href="{% url 'pharma:order_prescription' %}"><li class="nav-item">Prescription Orders</li></a>
+                    {% elif user.staff.role == "a" %}
+                    <a class="nav-link" href="{% url 'admins:attendance' %}"><li class="nav-item">Doctor Attendance</li></a>
+                    <a class="nav-link" href="{% url 'admins:list_patients' %}"><li class="nav-item">Patients List</li></a>
+                    <a class="nav-link" href="{% url 'admins:list_cases' %}"><li class="nav-item">Cases List</li></a>
+                    <a class="nav-link" href="{% url 'admins:create_patient' %}"><li class="nav-item">Create Patient</li></a>
+                    <a class="nav-link" href="{% url 'admins:create_case' %}"><li class="nav-item">Create Case</li></a>
+                    {% elif user.staff.role == "ac" %}
+                    <a class="nav-link" href="{% url 'accounts:dashboard' %}"><li class="nav-item">Dashboard</li></a>
+                    <a class="nav-link" href="{% url 'accounts:entries' %}"><li class="nav-item">Chart Of Accounts</li></a>
+                    {%endif%}
+                </ul>
+            </div>
+            <div class="main">
+                {%block body%}
+
+                {%endblock%}
+            </div>
+            <div class="footer">
+                <label>Med-Bay Team DeBug &copy; 2021</label>
+            </div>
+        </div>
+    </body>
+</html>

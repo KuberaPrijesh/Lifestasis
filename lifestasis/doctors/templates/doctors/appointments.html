@@ -1,0 +1,83 @@
+{%extends "template.html" %}
+
+{%block body %}
+<!--Full Detail Div-->
+<div class="patient-black-out">
+{% for case in cases %}
+    <div id="{{case.id}}" class="patient-full-container full-container">
+        <button class="close-full-btn" onclick="closeCaseFull()">X</button>
+        <label class="patient-full-detail-label">Name: </label>
+        <input class="item-detail" id="name" type="text" value="{{case.patient.name}}" onclick="copyDetail('name')" readonly><br>
+        <label class="patient-full-detail-label">Age: </label>
+        <input class="item-detail" id="age" type="text" value="{{case.patient.age}}" pattern="[0-9]+" onclick="copyDetail('age')" readonly><br>
+        <label class="patient-full-detail-label">Gender: </label>
+        <input class="item-detail" id="gender" type="text" value="{{case.patient.gender | upper}}" size="1" onclick="copyDetail('gender')" readonly><br>
+        <label class="patient-full-detail-label">Appointment Date and Time: </label>
+        <span>
+        <input class="item-detail" id="date" type="text" value="{{case.appointed_date.date}}" readonly>
+        <input class="item-detail" id="time" type="text" value="{{case.appointed_date.time}}" readonly><br>
+        </span>
+        <form method="post" id="{{case.id}}" class="doctor-patient-form" style="display: flex; flex-direction: column;">
+            {% csrf_token %}
+            {#{form.id}#}
+            <input type="number" name="id" value="{{case.id}}" required="" id="id_id" style="display: none">
+            <label class="patient-full-detail-label">Authorise Prescription:</label>
+            <!--<input class="item-detail" id="has-prescription" name="has-prescription" type="checkbox"> -->
+            {{form.has_pres}}
+            <label class="patient-full-detail-label">Diagnosis: </label>
+            <!--<textarea class="item-detail" id="diagnosis" cols="16" rows="5" name="diagnosis" placeholder="Your Diagnosis"></textarea>-->
+            {{form.desc}}
+            <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <button class="save-diagnosis-btn" onclick="location.href='view_history?id={{case.patient.id}}'">View History</button>
+            <input class="save-diagnosis-btn" type="submit" value="Save">
+            </div>
+        </form><br>
+    </div>
+{% endfor %}
+</div>
+
+<!--Summary Detail Div-->
+<div class="root-container">
+    <h3 class="list-title">Doctor's Dashboard</h3><br>
+    <h4 class="list-title">Appointed Patients</h4><br>
+    <div class="list-container">
+        {% if cases %}
+        {% for case in cases %}
+        <div class="container" onclick="showCaseFull({{case.id}})" style="cursor: pointer">
+            <label class="item-detail-label patient-detail-label" onclick="showCaseFull({{case.id}})">Name: </label>
+            <input class="item-detail" id="name" type="text" value="{{case.patient.name}}" readonly><br>
+            <label class="item-detail-label" onclick="showCaseFull({{case.id}})">Age: </label>
+            <input class="item-detail" id="age" type="text" value="{{case.patient.age}}" pattern="[0-9]+" readonly><br>
+            <label class="item-detail-label" onclick="showCaseFull({{case.id}})">Gender: </label>
+            <input class="item-detail" id="gender" type="text" value="{{case.patient.gender | upper}}" size="1" readonly><br>
+            <label class="item-detail-label" onclick="showCaseFull({{case.id}})">Appointment Date: </label>
+            <input class="item-detail" id="date" type="text" value="{{case.appointed_date.date}}" onclick="showPatientFull({{case.id}})" readonly>
+        </div>
+        {% endfor %}
+        {%else%}
+        <div class="container" style="cursor: pointer">
+            <label class="item-detail-label">No Appointments For Today</label>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{%block script%}
+<script>
+$(document).ready(function(){
+    $(".patient-black-out").hide();
+    $(".patient-full-container").hide();
+});  
+
+function showCaseFull(caseId) {
+    $(".patient-black-out").show();
+    $("#"+caseId).show();
+}
+
+function closeCaseFull() {
+    $(".patient-black-out").hide();
+    $(".patient-full-container").hide();
+}
+</script>
+{%endblock%}

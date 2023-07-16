@@ -1,0 +1,126 @@
+{%extends "template.html" %}
+
+{% block body %}
+
+<div class="patient-black-out">
+    {% for patient, cases in patients.items %}
+    <div class="prescription-full-header" id="patient_{{patient.id}}" tabindex="1">
+        <span style="display: flex; flex-direction: column">
+            <button class="close-full-btn" tabindex="1" onclick="closeCaseFull()">X</button><br>
+        </span>
+        <label class="case-full-detail-label">Name:</label><br>
+        <input class="item-detail" tabindex="-1" id="{{patient.id}}_name" type="text" value="{{patient.name}}" readonly><br>
+        <label class="case-full-detail-label">Age:</label><br>
+        <input class="item-detail" tabindex="-1" id="{{patient.id}}_age" type="text" value="{{patient.age}}" readonly><br>
+        <label class="case-full-detail-label">Gender:</label><br>
+        <input class="item-detail" tabindex="-1" id="{{patient.id}}_gender" type="text" value="{{patient.gender | upper}}" readonly>
+    </div>
+    {% endfor %} 
+    
+    
+    {% for patient, cases in patients.items %}
+    {% for case in cases %}
+    <div id="case_{{case.id}}" class="case-full-container full-container" tabindex="1">
+        <label class="case-full-detail-label">Case #{{forloop.counter}}</label><br>
+        <span>
+            <label class="case-full-detail-label">Case ID:</label>
+            <input class="item-detail" tabindex="-1" id="{{patient.id}}_{{case.id}}" type="text" value="{{case.id}}" readonly><br>
+            <label class="case-full-detail-label">Appointed Date:</label>
+            <input class="item-detail" tabindex="-1" id="{{case.id}}_date" type="text" value="{{case.appointed_date.date}}" readonly><br>
+            <label class="case-full-detail-label">Appointed Time:</label>
+            <input class="item-detail" tabindex="-1" id="{{case.id}}_time" type="text" value="{{case.appointed_date.time}}" readonly><br>
+                <label class="case-full-detail-label">Diagnosis:</label><br>
+                <textarea class="item-detail" tabindex="-1" id="{{patient.id}}_diagnosis" style="margin-left: 3vw; resize: vertical" cols="87%" rows="6" readonly>{{case.desc}}</textarea>
+        </span><br>
+        {% if case.prescription.medicine_set.all %}
+        <label class="case-full-detail-label">Prescribed Medicines:</label>
+            <ol class="item-detail" style="margin-left: 3vw;">
+                {% for medicine in case.prescription.medicine_set.all %}
+                <li style="margin-left: 2vw;">{{medicine.item.name}} x {{medicine.quantity}}</li>
+                {% endfor %}
+            </ol>
+        {%endif%}
+        {% if case.prescription.editedprescription.medicines.all %}
+        <label> Edited By {{case.prescription.editedprescription.user.user.username}}</label>
+            <ol class="item-detail" style="margin-left: 3vw;">
+                {% for medicine in case.prescription.editedprescription.medicines.all %}
+                <li style="margin-left: 2vw;">{{medicine.item.name}} x {{medicine.quantity}}</li>
+                {% endfor %}
+            </ol>
+        {%endif%}
+    </div>
+    {% endfor %}
+    {% endfor %}
+    
+</div>
+    
+
+<div class="root-container">
+    <h3 class="list-title">Patient Archive</h3><br>
+    <div class="list-container">
+        {% if patients %}
+        {% for patient, cases in patients.items %}
+        <div class="container">
+            <label class="detail-label patient-detail-label">Name: </label>
+            <input class="item-detail" id="{{patient.id}}_name" type="text" value="{{patient.name}}" readonly><br>
+            <label class="detail-label patient-detail-label">Age: </label>
+            <input class="item-detail" id="{{patient.id}}_age" type="text" value="{{patient.age}}" readonly><br>
+            <label class="detail-label patient-detail-label">Gender: </label>
+            <input class="item-detail" id="{{patient.id}}_gender" type="text" value="{{patient.gender | upper}}" readonly><br>
+            <label class="detail-label patient-detail-label">No. Cases: </label>
+            <input class="item-detail" id="{{patient.id}}_cases" type="text" value="{{cases.count}}" readonly><br>
+            <div>
+                <label class="prescriptions-label">Cases:</label>
+                <div class="prescriptions-list" style="overflow: scroll; height: 15vh;">
+                    {% for case in cases %}
+                    <div class="case" onclick="showCaseFull({{case.id}}, {{patient.id}})">
+                        <label>Case #{{forloop.counter}}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <button class="item-detail" onclick="location.href='view_history?id={{patient.id}}'">View History</button>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="container">
+            <label class="detail-label patient-detail-label">No Patients Handled Yet</label>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{%block script%}
+<script>
+    
+$(document).ready(function(){
+    $(".patient-black-out").hide();
+    $(".prescription-full-header").hide();
+    $(".case-full-container").hide();
+});    
+    
+function showCaseFull(caseID, patientID) {
+
+    $(".patient-black-out").show();
+    
+    $("#patient_"+patientID).show();
+    
+    $("#case_"+caseID).show();
+    
+}
+
+function closeCaseFull() {
+    
+    $(".patient-black-out").hide();
+    
+    $(".prescription-full-header").each(function(index, patient){
+       patient.style.display = "none";
+    });
+    
+    $(".case-full-container").each(function(index, item){
+       item.style.display = "none";
+    });
+}
+</script>
+{%endblock%}

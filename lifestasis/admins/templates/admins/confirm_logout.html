@@ -1,0 +1,36 @@
+{%extends "template.html"%}
+
+{%block body%}
+<div class="error-root">
+    <span>
+        <h1 style="display: inline;">You're already signed in as {{user}}</h1><h1 id="role" style="display: inline;"></h1>
+        <span id="account-role" style="display: none;">{{user.staff.role}}</span>
+    </span>
+    <span>
+        <h1>If you wish to login with another account please sign out</h1>
+        <button class="default-button" style="padding: 1vh 1vw 1vh 1vw; font-size: 3vh; border-radius: 8px;" onclick="document.location='{% url 'logout' %}'">Sign Out</button>
+    </span>
+</div>
+{%endblock%}
+
+{%block script%}
+<script>
+$(document).ready(function(){
+    var meta = $('#account-role');
+    
+    role = meta.text();
+    
+    if (role === "d") {
+        role = " (Doctor)";
+    } else if (role === "p") {
+        role = " (Pharmacy Manager)";
+    }  else if (role === "ac") {
+        role = " (Accountant)";
+    } else if (role === "a") {
+        role = " (Admin)";
+    }
+    
+    $('#role').text(role);
+});
+</script>
+{%endblock%}

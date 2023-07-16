@@ -1,0 +1,180 @@
+{% extends  'template.html' %}
+{% block body %}
+<div class="root-container">
+    <h3 class="list-title">Chart of Accounts</h3><br><br>
+        <table id="accounts-table" style=" width: 100%; border-collapse: collapse; margin: 0 0 2vh 0;">
+            <tr id="accounts-table-heading">
+                <th class="accounts-table-heading">S.No</th>
+                <th class="accounts-table-heading">Date</th>
+                <th class="accounts-table-heading">Name</th>
+                <th class="accounts-table-heading">Category</th>
+                <th class="accounts-table-heading">Type</th>
+                <th class="accounts-table-heading">Amount</th> 
+            </tr>
+            {% for entry in entries %}
+
+            {% if entry.type %}
+            <tr class="accounts-table-entry-row income">
+            {% else %}
+            <tr class="accounts-table-entry-row expense">
+            {% endif %}
+                <td class="accounts-table-entry">{{entry.id}}.</td>
+                <td class="accounts-table-entry">{{entry.date}}</td>
+                <td class="accounts-table-entry">{{entry.desc}}</t>
+                <td class="accounts-table-entry">{{entry.cat}}</td>
+                {% if entry.type %}
+                <td class="accounts-table-entry">Income</td>
+                {% else %}
+                <td class="accounts-table-entry">Expense</td>
+                {%endif%}
+                <td class="accounts-table-entry">&#8377; {{entry.price}}</th>
+            </tr>
+            {%endfor%}
+            <tr style="height: 7vh;" class="accounts-table-heading">
+                <th style="width: 8vw;" class="accounts-table-heading">
+                    <button onclick="addEntry()" class="entries-button">+</button>
+                </th>
+                <td colspan="4"></td>
+                <th style="width: 10vw;" class="accounts-table-heading">
+                    <button onclick="saveEntries()" class="entries-button">Save</button>
+                </th>
+            </tr>
+        </table>
+</div>
+{%endblock%}
+
+{% block script %}
+<script>
+function addEntry () {
+
+    var lastEntry = $("#accounts-table tr").eq(-2).children("td");
+    if ($("#accounts-table tr").eq(-2)[0].id != "accounts-table-heading") {
+        var idText = parseInt(lastEntry[0].innerText);
+    } else {
+       var idText = 0;
+    }
+    
+    idText++;
+
+    //inputs
+    var dateInput = $("<input>").attr("type", "date");
+    dateInput.attr("id", idText+"_date");
+    dateInput.addClass("accounts-input");
+    var nameInput = $("<input>").attr("type", "text");
+    nameInput.attr("id", idText+"_name");
+    nameInput.addClass("accounts-input");
+    var typeInput = $("<select></select>");
+    typeInput.attr({
+        "id": idText+"_type",
+        "onchange": "checkType("+idText+")"
+    });
+    typeInput.addClass("accounts-input");
+    var noneCat = $("<option>None</option>").addClass("dropdown-option");
+    typeInput.append(noneCat);
+    {% for cat in cats %}
+        var cat = $("<option>{{cat}}</option>").addClass("dropdown-option");
+        typeInput.append(cat);
+    {% endfor %}
+    var newCat = $("<option>Add New</option>").addClass("dropdown-option");
+    typeInput.append(newCat);
+    var incomeInput = $("<select></select>");
+    incomeInput.attr("id", idText+"_income/expense");
+    incomeInput.addClass("accounts-input");
+    var optionIncome = $("<option>Income</option>").addClass("dropdown-option");
+    var optionExpense = $("<option>Expense</option>").addClass("dropdown-option");
+    incomeInput.append(optionIncome, optionExpense);
+    var amountInput = $("<input>").attr(type, "number");
+    amountInput.attr("id", idText+"_amount");
+    amountInput.addClass("accounts-input");
+
+    var row = $("<tr></tr>").addClass("accounts-table-entry-row");
+    row.attr("id", idText+"_row");
+    row.addClass("new-entry");
+    var id = $("<td>" + idText + ".</td>").addClass("accounts-table-entry");
+    var date = $("<td></td>").addClass("accounts-table-entry");
+    date.append(dateInput);
+    var name = $("<td></td>").addClass("accounts-table-entry");
+    name.append(nameInput);
+    var type = $("<td></td>").addClass("accounts-table-entry");
+    type.append(typeInput);
+    var income = $("<td></td>").addClass("accounts-table-entry");
+    income.append(incomeInput);
+    var amount = $("<td></td>").addClass("accounts-table-entry");
+    amount.append(amountInput);
+    var save = $("<button>Save</button>")
+
+    row.append(id, date, name, type, income, amount);
+    $("#accounts-table tr").eq(-1).before(row);
+}
+
+function saveEntries() {
+    var entries = document.getElementsByClassName("new-entry");
+    var finalEntries = {};
+
+    var confirmSave = false;
+
+    for (i = 0; i < entries.length; i++) {
+
+        var id = entries[i].id.replace("_row", "");
+        var date = entries[i].childNodes[1].childNodes[0].value;
+        var desc = entries[i].childNodes[2].childNodes[0].value;
+        var cat = entries[i].childNodes[3].childNodes[0].value;
+        var type = entries[i].childNodes[4].childNodes[0].value;
+        var amount = entries[i].childNodes[5].childNodes[0].value;
+
+        if (date == "" || desc == "" || cat == "" || type == "" || amount == "") {
+            showMessage("Please Enter A Value In All The Fields");
+            confirmSave = false;
+        } else {
+            confirmSave = true;
+        }
+
+        var entry = [date, desc, cat, type, amount];
+
+        finalEntries[id] = entry;
+    }
+
+    if (confirmSave) {
+        $.ajax({
+            url: "{% url 'accounts:entries'%}",
+            type: 'GET',
+            data: {
+                'entries': JSON.stringify(finalEntries)
+            },
+            success: function () {
+                showMessage("Entries Saved");
+                location.reload();
+            },
+            error: function () {
+                showMessage("Unable to Save Entries");
+            }
+        });
+    }
+}
+
+function checkType(id) {
+    var typeInput = $('#'+id+'_type');
+    if (typeInput.val() == "Add New"){
+        $("#"+id+"_type").replaceWith('<input type="text" id="'+id+'_type" class="accounts-input" ondblclick="selectType('+id+')">');
+    }
+}
+
+function selectType(id) {
+    var typeInput = $("<select></select>");
+    typeInput.attr({
+        "id": id+"_type",
+        "onchange": "checkType("+id+")"
+    });
+    typeInput.addClass("accounts-input");
+    {% for cat in cats %}
+        var cat = $("<option>{{cat}}</option>").addClass("dropdown-option");
+        typeInput.append(cat);
+    {% endfor %}
+    var newCat = $("<option>Add New</option>").addClass("dropdown-option");
+    typeInput.append(newCat);
+
+    $("#"+id+"_type").replaceWith(typeInput);
+}
+
+</script>
+{%endblock%}

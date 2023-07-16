@@ -1,0 +1,137 @@
+{%extends "template.html"%}
+
+{%block body%}
+<div class="root-container">
+    <h3 class="list-title">Prescription {{case.prescription.id}}</h3><br>
+    <div class="container">
+        <label class="detail-label" class="patient-detail-label">Name: </label>
+        <input class="item-detail" id="{{case.id}}_name" type="text" value="{{case.patient.name}}" readonly><br>
+        <div>
+            <label class="prescriptions-label">Medicines:</label>
+            <div class="prescriptions-list" style="flex-direction: column;">
+                <div class="add-medicine" onclick="addMedicine()" id="addMedicineBtn">
+                    <label onclick="">Add Medicine</label>
+                </div>
+            </div>
+            <button class="item-detail" onclick="savePrescription({{case.id}})">Save</button>
+        </div>
+    </div>
+</div>
+{%endblock%}
+
+{%block script%}
+<script>
+
+    var medicineId = 0;
+    
+    function getMedicines() {
+        
+        var medicineList;
+        
+        $.ajax({
+            async: false,
+            url: "{% url 'doctor:list_medicines' %}",
+            type: 'GET',
+            success: function(data){
+                medicineList = data;
+            }
+        });
+        
+        return medicineList;
+    }
+                    
+    function addMedicine() {
+
+        var medicines = getMedicines();
+        
+        var medicineContainer = $("<div></div>").addClass("add-medicine");
+        
+        medicineContainer.addClass("medicine-single");
+        
+        medicineContainer.attr("id", medicineId);
+
+        var selector = $("<select></select>").attr("id", "medicine-list");
+        
+        var quantity = $("<input>").addClass("item-detail");
+        
+        quantity.attr({type:"number", value:"1", step:"1", min:"1", max:"20", onKeyDown:"return false", id:"medicine-quantity"});
+        
+        var removeBtn = $("<button>X</button>").addClass("item-detail");
+
+        removeBtn.attr({onclick:"removeMedicine("+medicineId+")"});
+
+        medicineContainer.append(selector, " ", quantity, " ", removeBtn);
+            
+        for(var medicine in medicines) {
+            var option = $("<option></option>");
+            option.text(medicines[medicine]);
+            selector.append(option);
+        }
+        
+        $("#addMedicineBtn").before(medicineContainer);
+
+        medicineId++;
+    }
+
+    function removeMedicine(medicineId) {
+        $("#"+medicineId).remove();
+    }
+    
+    function savePrescription(caseId) {
+        var medicines = getMedicines();
+        var selectedItems = [];
+        var finalItems = {};
+        var index = 0;
+        
+        var medicineContainers = $(".medicine-single");
+        
+        for (i = 0; i < medicineContainers.length; i++) {
+            var medicineContainer = medicineContainers[i];
+            var inputs = medicineContainer.childNodes;
+            var itemSelector = inputs[0].value;
+            var itemQuantity = inputs[2].value;
+            var itemId = 0;
+            var values = [];            
+            for (var medicine in medicines) {
+                if (itemSelector === medicines[medicine]) {
+                    itemId = medicine;
+                }
+            }
+            
+            values = [itemId, itemQuantity];
+            
+            selectedItems[index] = values;
+            index++;
+        }
+        
+        for (var item of selectedItems) {
+            if (item[0] in finalItems) {
+                finalItems[item[0]] = parseInt(item[1]) + parseInt(finalItems[item[0]]);
+                finalItems[item[0]] = finalItems[item[0]].toString();
+            } else {
+                finalItems[item[0]] = item[1];
+            }
+        }
+        
+        console.log(JSON.stringify(finalItems));
+        
+        $.ajax({
+            url: "{% url 'doctor:save_prescription'%}",
+            type: 'GET',
+            data: {
+                'case_id': caseId,
+                'medicines': JSON.stringify(finalItems)
+            },
+            success: function() {
+                showMessage("Prescription has been saved");
+                location="{% url 'doctor:dashboard' %}";
+            },
+            error: function() {
+                showMessage("Could not save prescription");
+                location.reload();
+            }
+        });
+    }
+    
+</script>
+{%endblock%}
